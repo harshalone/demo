@@ -1,0 +1,114 @@
+
+<!DOCTYPE html> 
+
+
+<meta charset="utf8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha256-YLGeXaapI0/5IgZopewRJcFXomhRMlYYjugPLSyNjTY=" crossorigin="anonymous" type="text/css"><!-- Custom styles for this template -->
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display:700,900" rel="stylesheet" type="text/css">
+    <link href="https://www.blognow.org/assets/css/core.css" rel="stylesheet" type="text/css">
+<style>
+    body {text-align: center; padding-top: 100px;}
+    .upload_button{ cursor: pointer; border: 2px dashed black; text-align: center; line-height: 100px; width: 200px; margin: auto; font-size: 40px; display: inline-block;}
+    #link, p , div {display: none}
+    div {display: inline-block;} 
+    .uploaded div {display: none}
+    .uploading p {display: inline}
+    .uploaded #link {display: inline}
+    em {position: absolute; bottom: 0; right: 0}
+	
+	.console-log-div {
+  border: 1px solid gray;
+  padding: 5px 10px;
+  border-radius: 5px;
+  width: 95% !important;
+  background-color: #efefef;
+  text-align: left;
+  overflow-wrap: break-word;
+  display: inline-block; 
+}
+</style>
+<title>Yo.</title>
+
+<!-- This is a simple image uploader, with drag'n drop -->
+<!-- Also, if you want to do more, read this: https://hacks.mozilla.org/2011/01/how-to-develop-a-html5-image-uploader/ -->
+
+<!-- You can use this code whereever you want (your own domain)
+No server side code needed. -->
+
+<!-- The image is sent to imgur.com because they allow Cross Domain XMLHttpRequest.
+You'll need a key: http://api.imgur.com/ -->
+
+<!-- So this is the dropbox, with a <button> in case of the user doesn't
+have icons. Yes. Think about Fvwm (Linux) users like me -->
+<div class="upload_button" onclick="document.querySelector('input').click()">DROP!
+ 
+<input style="visibility: none; width: 0px;" type="file" onchange="upload(this.files[0])">
+<div class="progress" style="height: 12px;">
+  <div  id="progressbar" class="progress-bar" role="progressbar" style="width: 10%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+</div>
+
+<div class="console-log-div prettyprint"></div>
+ 
+<!-- So here is the magic -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous" type="text/javascript"></script>
+<script>
+
+    /* Drag'n drop stuff */
+    window.ondragover = function(e) {e.preventDefault()}
+    window.ondrop = function(e) {e.preventDefault(); upload(e.dataTransfer.files[0]); }
+    function upload(file) {
+
+        /* Is the file an image? */
+        if (!file || !file.type.match(/image.*/)) return;
+
+        /* It is! */
+        //document.body.className = "uploading";
+
+        /* Lets build a FormData object*/
+        var fd = new FormData(); // I wrote about it: https://hacks.mozilla.org/2011/01/how-to-develop-a-html5-image-uploader/
+        fd.append("image", file); // Append the file
+        var xhr = new XMLHttpRequest(); // Create the XHR (Cross-Domain XHR FTW!!!) Thank you sooooo much imgur.com
+        xhr.open("POST", "https://api.imgur.com/3/image.json"); // Boooom!
+        xhr.onload = function() {
+            // Big win!
+			var returned_data = JSON.parse(xhr.responseText).data;
+            //document.querySelector("#link").href = returned_data.link;
+			//document.getElementById("img_c").src= returned_data.link;
+            //document.body.className = "uploaded";
+			console.log(returned_data);
+        }
+        xhr.onprogress = function (e) {
+			if (e.lengthComputable) {
+			     
+				console.log(e.loaded+  " / " + e.total);
+				var percentComplete = (e.loaded / e.total) * 100;  
+                //document.getElementById("progressbar").value = percentComplete;
+				//$('.progress-bar').css('width', percentComplete+'%').attr('aria-valuenow', percentComplete);  
+				
+			}else{
+			  console.log(e.loaded+  " / " + e.total);
+			  var percentComplete = parseInt(e.target.getResponseHeader('x-decompressed-content-length'), 10);
+			
+			}
+			$(".progress-bar").css("width", percentComplete+'%');
+		}
+		xhr.onloadstart = function (e) {
+			console.log("start")
+		}
+		xhr.onloadend = function (e) {
+			console.log("end")
+		}
+        xhr.setRequestHeader('Authorization', 'Client-ID 28aaa2e823b03b1'); // Get your own key http://api.imgur.com/
+        
+        // Ok, I don't handle the errors. An exercise for the reader.
+
+        /* And now, we send the formdata */
+        xhr.send(fd);
+    }
+</script>
+<script src="js/console-log-div.js"></script>
+<!-- Bla bla bla stuff ... -->
+
+ 
